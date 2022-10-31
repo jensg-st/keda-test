@@ -1,0 +1,103 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: helloworld
+  labels:
+    app: helloworld
+spec:
+  ports:
+  - name: http
+    port: 8000
+    targetPort: 8000
+  selector:
+    app: helloworld
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: helloworld
+  labels:
+    app: helloworld
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: helloworld
+  template:
+    metadata:
+      labels:
+        app: helloworld
+    spec:
+      containers:
+      - name: helloworld
+        image: nginxdemos/hello
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8000
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: hw-scaler
+  namespace: default
+spec:
+  scaleTargetRef:
+    name: helloworld
+  cooldownPeriod: 10
+  triggers:
+    - type: external-push
+      metadata:
+        scalerAddress: keda-grpc.default.svc:6000
+        service: helloworld
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: helloworld1
+  labels:
+    app: helloworld1
+spec:
+  ports:
+  - name: http
+    port: 8000
+    targetPort: 8000
+  selector:
+    app: helloworld1
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: helloworld1
+  labels:
+    app: helloworld1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: helloworld1
+  template:
+    metadata:
+      labels:
+        app: helloworld1
+    spec:
+      containers:
+      - name: helloworld1
+        image: nginxdemos/hello
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8000
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: hw-scaler1
+  namespace: default
+spec:
+  scaleTargetRef:
+    name: helloworld1
+  cooldownPeriod: 10
+  triggers:
+    - type: external-push
+      metadata:
+        scalerAddress: keda-grpc.default.svc:6000
+        service: helloworld1
